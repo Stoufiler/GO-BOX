@@ -480,7 +480,7 @@ func createOption90(ContextID string, Cookie string, Url string) string {
 		// }
 	}
 
-	fmt.Println(md5s)
+	fmt.Println("MD5S : " + string(md5s))
 
 	return string("DHCP Option 90      : " + nmc.Status.Username)
 }

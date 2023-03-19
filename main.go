@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -18,8 +17,7 @@ import (
 
 // Define some global variables used on further functions
 var leoxCommands []string
-var fti string
-var ftipass string
+var fti, ftipass, GPON_SN, PON_VENDOR_ID, HW_HWVER, OMCI_SW_VER1, OMCI_SW_VER2, dhcpoption90, dhcpoption77, vlanid, macaddress string
 
 // Define struct to handle http requests : https://mholt.github.io/json-to-go/
 type Context struct {
@@ -263,13 +261,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Print("Account FTI Password: ")
-	// ftipass, err := terminal.ReadPassword(int(os.Stdin.Fd()))
-	// if err != nil {
-	// 	fmt.Println("Please provide a password")
-	// 	os.Exit(1)
-	// }
-
 	// Concatenate the URL
 	url := "http://" + ip + "/ws"
 
@@ -305,23 +296,32 @@ func instantiateConnection(url string, username string, password string) {
 		fmt.Println("There was an error when connecting to Livebox")
 		os.Exit(1)
 	} else {
-		fmt.Println("Successfully connected to Livebox !")
-		displayNecessaryInformations(instanciation.Data.ContextID, cookie, url)
+		fmt.Println("")
+		fmt.Println("✅ Successfully connected to Livebox ! ✅")
+		getOntInfos(instanciation.Data.ContextID, cookie, url)
+		getMacAddress(instanciation.Data.ContextID, cookie, url)
+		getInternetVlan(instanciation.Data.ContextID, cookie, url)
+		getDHCPInfos(instanciation.Data.ContextID, cookie, url)
+		createOption90(instanciation.Data.ContextID, cookie, url)
+
+		displayNecessaryInformations()
 	}
 
 }
 
-func displayNecessaryInformations(ContextID string, Cookie string, Url string) {
+func displayNecessaryInformations() {
+	fmt.Println("")
+	fmt.Println("===========LEOX GPON COMMAND=============")
+	generateGponCommands()
 	fmt.Println("=========================================")
-	fmt.Println(getOntInfos(ContextID, Cookie, Url))
-	fmt.Println(getMacAddress(ContextID, Cookie, Url))
-	fmt.Println(getInternetVlan(ContextID, Cookie, Url))
-	fmt.Println(getDHCPInfos(ContextID, Cookie, Url))
-	fmt.Println(createOption90(ContextID, Cookie, Url))
+	fmt.Println("")
+	fmt.Println("==========UDM PRO SE SETTINGS============")
+	displayUDMinfos()
+	fmt.Println("=========================================")
 }
 
 // Fetch ONT Informations
-func getOntInfos(ContextID string, Cookie string, Url string) string {
+func getOntInfos(ContextID string, Cookie string, Url string) {
 
 	payload := strings.NewReader("{\"service\":\"NeMo.Intf.veip0\",\"method\":\"getMIBs\",\"parameters\":{\"mibs\":\"gpon\"}}")
 
@@ -343,16 +343,15 @@ func getOntInfos(ContextID string, Cookie string, Url string) string {
 		os.Exit(1)
 	}
 
-	return string("Serial Number       : " + ont.Status.Gpon.Veip0.SerialNumber + "\n" +
-		"Hardware Version    : " + ont.Status.Gpon.Veip0.HardwareVersion + "\n" +
-		"Vendor ID           : " + ont.Status.Gpon.Veip0.VendorID + "\n" +
-		"ONTSoftwareVersion0 : " + ont.Status.Gpon.Veip0.ONTSoftwareVersion0 + "\n" +
-		"ONTSoftwareVersion1 : " + ont.Status.Gpon.Veip0.ONTSoftwareVersion1,
-	)
+	GPON_SN = ont.Status.Gpon.Veip0.SerialNumber
+	PON_VENDOR_ID = ont.Status.Gpon.Veip0.VendorID
+	HW_HWVER = ont.Status.Gpon.Veip0.HardwareVersion
+	OMCI_SW_VER1 = ont.Status.Gpon.Veip0.ONTSoftwareVersion0
+	OMCI_SW_VER2 = ont.Status.Gpon.Veip0.ONTSoftwareVersion1
 }
 
 // Fetch Mac Address
-func getMacAddress(ContextID string, Cookie string, Url string) string {
+func getMacAddress(ContextID string, Cookie string, Url string) {
 
 	payload := strings.NewReader("{\"service\":\"NMC\",\"method\":\"getWANStatus\",\"parameters\":{}}")
 
@@ -374,11 +373,11 @@ func getMacAddress(ContextID string, Cookie string, Url string) string {
 		os.Exit(1)
 	}
 
-	return string("Mac Address         : " + mac.Data.MACAddress)
+	macaddress = mac.Data.MACAddress
 }
 
 // Fetch Internet VLAN
-func getInternetVlan(ContextID string, Cookie string, Url string) string {
+func getInternetVlan(ContextID string, Cookie string, Url string) {
 
 	payload := strings.NewReader("{\"service\":\"NeMo.Intf.data\",\"method\":\"getFirstParameter\",\"parameters\":{\"name\":\"VLANID\"}}")
 
@@ -393,18 +392,17 @@ func getInternetVlan(ContextID string, Cookie string, Url string) string {
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)
 
-	var vlanid VlanInternet
+	var vlaninternet VlanInternet
 
-	if err := json.Unmarshal(body, &vlanid); err != nil {
+	if err := json.Unmarshal(body, &vlaninternet); err != nil {
 		fmt.Println("Can not unmarshal JSON")
 		os.Exit(1)
 	}
-
-	return string("VLAN ID             : " + strconv.Itoa(vlanid.Status))
+	vlanid = strconv.Itoa(vlaninternet.Status)
 }
 
 // Fetch DHCP Infos
-func getDHCPInfos(ContextID string, Cookie string, Url string) string {
+func getDHCPInfos(ContextID string, Cookie string, Url string) {
 
 	payload := strings.NewReader("{\"service\":\"NeMo.Intf.data\",\"method\":\"getMIBs\",\"parameters\":{\"mibs\":\"dhcp\"}}")
 
@@ -436,11 +434,11 @@ func getDHCPInfos(ContextID string, Cookie string, Url string) string {
 
 	opt70 := strings.Split(option70decodedstring, "+")
 
-	return string("DHCP Option 77      : " + opt70[1])
+	dhcpoption77 = opt70[1]
 }
 
 // Automatically create the option 90 : https://jsfiddle.net/kgersen/3mnsc6wy/
-func createOption90(ContextID string, Cookie string, Url string) string {
+func createOption90(ContextID string, Cookie string, Url string) {
 
 	payload := strings.NewReader("{\"service\":\"NMC\",\"method\":\"get\",\"parameters\":{}}")
 
@@ -461,26 +459,88 @@ func createOption90(ContextID string, Cookie string, Url string) string {
 		fmt.Println("Can not unmarshal JSON")
 		os.Exit(1)
 	}
-	fmt.Println(ftipass)
-	const Salt = "123456667890123456"
+
+	const Salt = "1234567890123456"
 	const Byte = "A"
 
-	var h = md5.New()
-	io.WriteString(h, Byte+ftipass+Salt)
-	md5 := h.Sum(nil)
-
-	fmt.Println(len(md5))
-
-	var md5s byte
-
-	for i := 0; i < len(md5); i += 2 {
-		md5s += md5[i] + md5[i+1]
-		// if i < len(md5)-2 {
-		// 	md5s += ":"
-		// }
+	fmt.Print("Account FTI Password: ")
+	ftipass, err := terminal.ReadPassword(int(os.Stdin.Fd()))
+	if err != nil {
+		fmt.Println("Please provide a password")
+		os.Exit(1)
 	}
 
-	fmt.Println("MD5S : " + string(md5s))
+	fmt.Println("")
 
-	return string("DHCP Option 90      : " + nmc.Status.Username)
+	var h = md5.New()
+	h.Write([]byte(Byte + string(ftipass) + Salt))
+
+	md5 := hex.EncodeToString(h.Sum(nil))
+
+	var md5s string
+
+	for i := 0; i < len(md5); i += 2 {
+		md5s += string(md5[i]) + string(md5[i+1])
+		if i < len(md5)-2 {
+			md5s = md5s + ":"
+		}
+	}
+
+	var st11zero = "00:00:00:00:00:00:00:00:00:00:00"
+	var idorange = "01" // variable
+	var idsalt = "3c"   // 16
+	var idhash = "03"   //1+16
+	var fixed = "1a:09:00:00:05:58:01:03:41"
+
+	output := st11zero + ":" + fixed + ":" + TLofTLS(idorange, len(nmc.Status.Username)+2) + ":" + SofTLS(nmc.Status.Username) + ":" + TLofTLS(idsalt, 2+16) + ":" + SofTLS(Salt) + ":" + TLofTLS(idhash, 2+1+16) + ":" + SofTLS(Byte) + ":" + md5s
+
+	dhcpoption90 = output
+}
+
+func TLofTLS(id string, l int) string {
+	var toAdd = strings.ToUpper((hex.EncodeToString([]byte(string(l)))))
+	if len(toAdd) < 2 {
+		toAdd = "0" + toAdd
+	}
+	return string(id + ":" + toAdd)
+}
+
+func SofTLS(s string) string {
+	var toAdd string
+	var res string = ""
+
+	for i := 0; i < len(s); i++ {
+		charcode := []rune(s)[i]
+		toAdd = strings.ToUpper((hex.EncodeToString([]byte(string(charcode)))))
+		if len(toAdd) < 2 {
+			toAdd = "0" + toAdd
+		}
+		res += toAdd
+		if i < len(s)-1 {
+			res += ":"
+		}
+	}
+
+	return res
+}
+
+func generateGponCommands() {
+	fmt.Println("flash set GPON_PLOAM_PASSWD DEFAULT012")
+	fmt.Println("flash set OMCI_TM_OPT 0")
+	fmt.Println("flash set OMCI_OLT_MODE 1")
+	fmt.Println("flash set GPON_SN " + GPON_SN)
+	fmt.Println("flash set PON_VENDOR_ID " + PON_VENDOR_ID)
+	fmt.Println("flash set HW_HWVER " + HW_HWVER)
+	fmt.Println("flash set OMCI_SW_VER1 " + OMCI_SW_VER1)
+	fmt.Println("flash set OMCI_SW_VER2 " + OMCI_SW_VER2)
+}
+
+func displayUDMinfos() {
+	fmt.Println("NAME              : LEOX GPON")
+	fmt.Println("VLAN ID           : " + vlanid)
+	fmt.Println("MAC Address Clone : " + macaddress)
+	fmt.Println("DHCP OPTION 60    : sagem")
+	fmt.Println("DHCP OPTION 77    : " + dhcpoption77)
+	fmt.Println("DHCP OPTION 90    : " + dhcpoption90)
+	fmt.Println("DHCP CoS          : 6 ")
 }

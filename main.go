@@ -16,10 +16,12 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
+// Define some global variables used on further functions
 var leoxCommands []string
 var fti string
 var ftipass string
 
+// Define struct to handle http requests : https://mholt.github.io/json-to-go/
 type Context struct {
 	Status int `json:"status"`
 	Data   struct {
@@ -235,9 +237,11 @@ type NMC struct {
 func main() {
 	var ip, username string
 
+	// Ask for IP
 	fmt.Print("Livebox IP : ")
 	fmt.Scan(&ip)
 
+	// Check if IP is good and private
 	addr := net.ParseIP(ip)
 	if addr == nil {
 		fmt.Println("Please provide a real IP address")
@@ -247,9 +251,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Ask for Username
 	fmt.Print("Username: ")
 	fmt.Scan(&username)
 
+	// Ask for Password without displaying it
 	fmt.Print("Password: ")
 	password, err := terminal.ReadPassword(int(os.Stdin.Fd()))
 	if err != nil {
@@ -264,11 +270,13 @@ func main() {
 	// 	os.Exit(1)
 	// }
 
+	// Concatenate the URL
 	url := "http://" + ip + "/ws"
 
 	instantiateConnection(url, username, string(password))
 }
 
+// This function will instanciate a connection to Livebox to catch ContextID and Cookie
 func instantiateConnection(url string, username string, password string) {
 	payload := strings.NewReader("{\"service\":\"sah.Device.Information\",\"method\":\"createContext\",\"parameters\":{\"applicationName\":\"webui\",\"username\":\"" + username + "\",\"password\":\"" + password + "\"}}")
 
@@ -312,6 +320,7 @@ func displayNecessaryInformations(ContextID string, Cookie string, Url string) {
 	fmt.Println(createOption90(ContextID, Cookie, Url))
 }
 
+// Fetch ONT Informations
 func getOntInfos(ContextID string, Cookie string, Url string) string {
 
 	payload := strings.NewReader("{\"service\":\"NeMo.Intf.veip0\",\"method\":\"getMIBs\",\"parameters\":{\"mibs\":\"gpon\"}}")
@@ -342,6 +351,7 @@ func getOntInfos(ContextID string, Cookie string, Url string) string {
 	)
 }
 
+// Fetch Mac Address
 func getMacAddress(ContextID string, Cookie string, Url string) string {
 
 	payload := strings.NewReader("{\"service\":\"NMC\",\"method\":\"getWANStatus\",\"parameters\":{}}")
@@ -367,6 +377,7 @@ func getMacAddress(ContextID string, Cookie string, Url string) string {
 	return string("Mac Address         : " + mac.Data.MACAddress)
 }
 
+// Fetch Internet VLAN
 func getInternetVlan(ContextID string, Cookie string, Url string) string {
 
 	payload := strings.NewReader("{\"service\":\"NeMo.Intf.data\",\"method\":\"getFirstParameter\",\"parameters\":{\"name\":\"VLANID\"}}")
@@ -392,6 +403,7 @@ func getInternetVlan(ContextID string, Cookie string, Url string) string {
 	return string("VLAN ID             : " + strconv.Itoa(vlanid.Status))
 }
 
+// Fetch DHCP Infos
 func getDHCPInfos(ContextID string, Cookie string, Url string) string {
 
 	payload := strings.NewReader("{\"service\":\"NeMo.Intf.data\",\"method\":\"getMIBs\",\"parameters\":{\"mibs\":\"dhcp\"}}")
@@ -427,6 +439,7 @@ func getDHCPInfos(ContextID string, Cookie string, Url string) string {
 	return string("DHCP Option 77      : " + opt70[1])
 }
 
+// Automatically create the option 90 : https://jsfiddle.net/kgersen/3mnsc6wy/
 func createOption90(ContextID string, Cookie string, Url string) string {
 
 	payload := strings.NewReader("{\"service\":\"NMC\",\"method\":\"get\",\"parameters\":{}}")

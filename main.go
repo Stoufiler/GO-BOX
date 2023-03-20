@@ -1,16 +1,20 @@
 package main
 
 import (
+	"bytes"
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -242,11 +246,9 @@ func main() {
 	// Check if IP is good and private
 	addr := net.ParseIP(ip)
 	if addr == nil {
-		fmt.Println("Please provide a real IP address")
-		os.Exit(1)
+		log.Fatalln("Please provide a real IP Address")
 	} else if !addr.IsPrivate() {
-		fmt.Println("Please provide a local IP address")
-		os.Exit(1)
+		log.Fatalln("Please provide a private IP Address")
 	}
 
 	// Ask for Username
@@ -257,8 +259,9 @@ func main() {
 	fmt.Print("Password: ")
 	password, err := terminal.ReadPassword(int(os.Stdin.Fd()))
 	if err != nil {
-		fmt.Println("Please provide a password")
-		os.Exit(1)
+		log.Fatalln("Please provide a password")
+	} else if len(password) == 0 {
+		log.Fatalln("Password cannot be empty")
 	}
 
 	// Concatenate the URL
@@ -277,7 +280,16 @@ func instantiateConnection(url string, username string, password string) {
 	req.Header.Add("Authorization", "X-Sah-Login")
 	req.Header.Add("Content-Type", "application/json")
 
-	res, _ := http.DefaultClient.Do(req)
+	var netClient = &http.Client{
+		Timeout: time.Second * 5,
+	}
+
+	res, err := netClient.Do(req)
+
+	if err != nil {
+		fmt.Println()
+		log.Fatalln("Timeout (5s) exceeded while connecting to Livebox")
+	}
 
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)
@@ -293,8 +305,7 @@ func instantiateConnection(url string, username string, password string) {
 	}
 
 	if instanciation.Status != 0 {
-		fmt.Println("There was an error when connecting to Livebox")
-		os.Exit(1)
+		errors.New("!!! Unable to connect to Livebox !!! Please check your login/pass")
 	} else {
 		fmt.Println("")
 		fmt.Println("✅ Successfully connected to Livebox ! ✅")
@@ -302,7 +313,7 @@ func instantiateConnection(url string, username string, password string) {
 		getMacAddress(instanciation.Data.ContextID, cookie, url)
 		getInternetVlan(instanciation.Data.ContextID, cookie, url)
 		getDHCPInfos(instanciation.Data.ContextID, cookie, url)
-		createOption90(instanciation.Data.ContextID, cookie, url)
+		// createOption90(instanciation.Data.ContextID, cookie, url)
 
 		displayNecessaryInformations()
 	}
@@ -435,6 +446,18 @@ func getDHCPInfos(ContextID string, Cookie string, Url string) {
 	opt70 := strings.Split(option70decodedstring, "+")
 
 	dhcpoption77 = opt70[1]
+
+	// Add : every 2 char for DHCP Option 90
+	var buffer bytes.Buffer
+	var n_1 = 2 - 1
+	var l_1 = len(dhcpinfos.Status.Dhcp.DhcpData.SentOption.Num90.Value) - 1
+	for i, rune := range dhcpinfos.Status.Dhcp.DhcpData.SentOption.Num90.Value {
+		buffer.WriteRune(rune)
+		if i%2 == n_1 && i != l_1 {
+			buffer.WriteRune(':')
+		}
+	}
+	dhcpoption90 = buffer.String()
 }
 
 // Automatically create the option 90 : https://jsfiddle.net/kgersen/3mnsc6wy/

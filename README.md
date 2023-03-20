@@ -37,10 +37,9 @@ Example :
 ```bash
 ./gobox
 Livebox IP : 192.168.1.1
-Username: admin
-Password: 
+Username : admin
+Password : 
 ✅ Successfully connected to Livebox ! ✅
-Account FTI Password: 
 
 ===========LEOX GPON COMMAND=============
 flash set GPON_PLOAM_PASSWD DEFAULT012

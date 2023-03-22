@@ -1,12 +1,12 @@
 <div align="center">
 <img src="images/logo.png" width="50%">
-<h1> GOBOX</h1>
+<h1> GO-BOX</h1>
 <small><i>Tool to help you to bypass your Livebox</i></small>
 </div>
 
 
 # Overview
-GOBOX is an application written in GO that allows you to automatically generate commands to help you to bypass your Livebox
+GO-BOX is an application written in GO that allows you to automatically generate commands to help you to bypass your Livebox
 
 This idea came to me while looking for how to replace my Livebox with my UDM SE.
 

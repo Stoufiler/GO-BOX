@@ -1,4 +1,4 @@
-module github.com/StephanGR/gobox
+module github.com/StephanGR/GO-BOX
 
 go 1.20
 

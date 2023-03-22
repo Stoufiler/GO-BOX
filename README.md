@@ -50,6 +50,15 @@ flash set PON_VENDOR_ID SMBS
 flash set HW_HWVER XXXXXXXXXXXX
 flash set OMCI_SW_VER1 XXXXXXXXXXXXX
 flash set OMCI_SW_VER2 XXXXXXXXXXXXX
+
+## Unplug fiber from Livebox and plug it into UDM and wait a minute ##
+
+Execute this command -> omcicli mib get 131
+
+OLT VENDOR ID (HWTC, ALCL, ...) : alcl
+
+Execute this command -> flash set OMCC_VER 128
+
 =========================================
 
 ==========UDM PRO SE SETTINGS============

@@ -1,9 +1,10 @@
 <div align="center">
 <img src="images/logo.png" width="50%">
 <h1> GO-BOX</h1>
-<small><i>Tool to help you to bypass your Livebox</i></small>
-</div>
+<small><i>Tool to help you to bypass your Livebox</i></small></br>
 
+![GitHub all releases](https://img.shields.io/github/downloads/StephanGR/GO-BOX/total?style=for-the-badge)
+</div
 
 # Overview
 GO-BOX is an application written in GO that allows you to automatically generate commands to help you to bypass your Livebox

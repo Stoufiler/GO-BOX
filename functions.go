@@ -118,7 +118,7 @@ func getDHCPInfos() {
 
 func generateOMCC(oltvendorid string) {
 	id := "128"
-	dict := map[string]string{"HWTC": "131", "ALCL": "128"}
+	dict := map[string]string{"HWTC": "136", "ALCL": "128"}
 
 	if value, ok := dict[oltvendorid]; ok {
 		id = value
@@ -126,24 +126,25 @@ func generateOMCC(oltvendorid string) {
 		fmt.Println("Unknown OLT VENDOR ID, defaulting to 128")
 	}
 
-	fmt.Println("\nExecute this command -> flash set OMCC_VER " + id + "\n")
+	fmt.Println("\nExecute this command -> flash set OMCC_VER " + id)
+
+	if oltvendorid == "ALCL" {
+		fmt.Println("flash set HW_HWVER " + HW_HWVER)
+		fmt.Println("flash set OMCI_SW_VER1 " + OMCI_SW_VER1)
+		fmt.Println("flash set OMCI_SW_VER2 " + OMCI_SW_VER2)
+		fmt.Println("flash set OMCI_TM_OPT 0")
+		fmt.Println("flash set OMCI_OLT_MODE 1")
+	}
 }
 
 func generateGponCommands() {
 	var oltvendorid string
 
 	fmt.Println("flash set GPON_PLOAM_PASSWD DEFAULT012")
-	fmt.Println("flash set OMCI_TM_OPT 0")
-	fmt.Println("flash set OMCI_OLT_MODE 1")
 	fmt.Println("flash set GPON_SN " + GPON_SN)
 	fmt.Println("flash set PON_VENDOR_ID " + PON_VENDOR_ID)
-	fmt.Println("flash set HW_HWVER " + HW_HWVER)
-	fmt.Println("flash set OMCI_SW_VER1 " + OMCI_SW_VER1)
-	fmt.Println("flash set OMCI_SW_VER2 " + OMCI_SW_VER2)
 	fmt.Println("\n## Unplug fiber from Livebox and plug it into UDM and wait a minute ##\n")
 	fmt.Println("Execute this command -> omcicli mib get 131")
-
-	// gnnYqBcYfn%5G!nY7@JDA@x
 
 	fmt.Print("\nOLT VENDOR ID (HWTC, ALCL, ...) : ")
 	fmt.Scan(&oltvendorid)

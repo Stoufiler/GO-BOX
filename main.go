@@ -19,10 +19,16 @@ import (
 var CONTEXTID, URL, COOKIE string
 
 // Define some global variables used on further functions
-var fti, ftipass, GPON_SN, PON_VENDOR_ID, HW_HWVER, OMCI_SW_VER1, OMCI_SW_VER2, dhcpoption90, dhcpoption77, vlanid, macaddress string
+var GPON_SN, PON_VENDOR_ID, HW_HWVER, OMCI_SW_VER1, OMCI_SW_VER2, dhcpoption90, dhcpoption77, vlanid, macaddress string
 
 func main() {
 	var ip, username string
+	var boxid uint8
+
+	fmt.Println("Which box do you have ?")
+	fmt.Println("1 - Livebox (DHCP Mode) ?")
+	fmt.Println("2 - Funbox (PPPoE Mode) ?")
+	fmt.Scan(&boxid)
 
 	// Ask for IP
 	fmt.Print("Livebox IP : ")
@@ -49,10 +55,17 @@ func main() {
 		log.Fatalln("Password cannot be empty")
 	}
 
-	// Concatenate the URL
-	url := "http://" + ip + "/ws"
+	switch boxid {
+	case 1:
+		// Concatenate the URL
+		url := "http://" + ip + "/ws"
+		instantiateConnection(url, username, string(password))
+	case 2:
+		instantiateFunboxConnection(ip, username, string(password))
+	default:
+		log.Fatalln("Please provide a good option")
+	}
 
-	instantiateConnection(url, username, string(password))
 }
 
 // This function will instanciate a connection to Livebox to catch ContextID and Cookie
@@ -105,7 +118,47 @@ func instantiateConnection(url string, username string, password string) {
 
 		displayNecessaryInformations()
 	}
+}
 
+// This function will instanciate a connection to Livebox to catch ContextID and Cookie
+func instantiateFunboxConnection(ip string, username string, password string) {
+	url := "http://" + ip + "/authentication?username=" + username + "&password=" + string(password)
+
+	req, _ := http.NewRequest("POST", url, nil)
+
+	var netClient = &http.Client{
+		Timeout: time.Second * 5,
+	}
+
+	res, err := netClient.Do(req)
+
+	if err != nil {
+		fmt.Println()
+		log.Fatalln("Timeout (5s) exceeded while connecting to Livebox")
+	}
+
+	defer res.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body)
+
+	cookie := (res.Header.Get("Set-Cookie"))
+	str := strings.Split(cookie, ";")
+	cookie = str[0]
+
+	var instanciation Context
+
+	if err := json.Unmarshal(body, &instanciation); err != nil {
+		fmt.Println("Can not unmarshal JSON")
+	}
+
+	if instanciation.Status != 0 {
+		errors.New("!!! Unable to connect to Livebox !!! Please check your login/pass")
+	} else {
+		fmt.Println("")
+		fmt.Println("✅ Successfully connected to Livebox ! ✅")
+		CONTEXTID = instanciation.Data.ContextID
+		COOKIE = cookie
+		URL = url
+	}
 }
 
 func displayNecessaryInformations() {

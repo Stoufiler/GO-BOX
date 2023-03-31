@@ -10,6 +10,13 @@ type Context struct {
 	} `json:"data"`
 }
 
+type FunboxContext struct {
+	Status int `json:"status"`
+	Data   struct {
+		ContextID string `json:"contextID"`
+	} `json:"data"`
+}
+
 type Ont struct {
 	Status struct {
 		Gpon struct {

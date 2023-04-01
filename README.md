@@ -18,48 +18,68 @@ I've spent so much time to find how to configure the SFP GPON and DHCP Options, 
 Download latest release according to your OS
 
 ```bash
-tar -xvcf gobox_Linux_x86_64.tar.gz
-cd gobox_Linux_x86_64
+tar -xvcf GO-BOX_Linux_x86_64.tar.gz
+cd GO-BOX_Linux_x86_64
 ./gobox
 ```
 
 ## Compile by yourself
 ```bash
-git clone https://github.com/StephanGR/gobox.git
-cd gobox
+git clone https://github.com/StephanGR/GO-BOX.git
+cd GO-BOX
 go build .
-./gobox
+./GO-BOX
 ```
 
 # Usage
-Simply fill fields asked by program
-
-Example :
 ```bash
-./gobox
-Livebox IP : 192.168.1.1
-Username : admin
+NAME:
+   GO-BOX - CLI tool to fetch infos from Livebox/Funbox
+
+USAGE:
+   GO-BOX --ip <box ip> --box <livebox/funbox>
+
+COMMANDS:
+   help, h  Shows a list of commands or help for one command
+
+GLOBAL OPTIONS:
+   --box value  Type of orange box (Livebox, Funbox)
+   --ip value   IP address of box
+   --help, -h   show help
+```
+## Windows
+Open a powershell terminal and go to executable file
+```powershell
+.\GO_BOX.exe --ip 192.168.1.1 --box livebox
+```
+
+## Linux / MacOS
+Open a terminal and go to executable file
+```bash
+./GO-BOX --ip 192.168.1.1 --box livebox
+```
+## Example
+```bash
+./GO-BOX --ip 192.168.1.1 --box livebox
 Password : 
 ✅ Successfully connected to Livebox ! ✅
 
 ===========LEOX GPON COMMAND=============
-flash set GPON_PLOAM_PASSWD DEFAULT012
-flash set OMCI_TM_OPT 0
-flash set OMCI_OLT_MODE 1
-flash set GPON_SN XXXXXXXXXXXX
+flash set GPON_SN SMBS031E9F7D
 flash set PON_VENDOR_ID SMBS
-flash set HW_HWVER XXXXXXXXXXXX
-flash set OMCI_SW_VER1 XXXXXXXXXXXXX
-flash set OMCI_SW_VER2 XXXXXXXXXXXXX
 
 ## Unplug fiber from Livebox and plug it into UDM and wait a minute ##
 
 Execute this command -> omcicli mib get 131
 
-OLT VENDOR ID (HWTC, ALCL, ...) : alcl
+OLT VENDOR ID (HWTC, ALCL, ...) : ALCL
 
 Execute this command -> flash set OMCC_VER 128
-
+flash set HW_HWVER SMBSSGLBF121
+flash set OMCI_SW_VER1 SAHEOFR046600
+flash set OMCI_SW_VER2 SAHEOFR045314
+flash set OMCI_TM_OPT 0
+flash set OMCI_OLT_MODE 1
 =========================================
 
 ==========UDM PRO SE SETTINGS============

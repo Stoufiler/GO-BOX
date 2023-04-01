@@ -35,6 +35,41 @@ func postRequest(payload string) []byte {
 	return body
 }
 
+func displayFunboxValues(ip string) {
+	url := "http://" + ip + "/sysbus/NeMo/Intf/data:getMIBs"
+
+	req, _ := http.NewRequest("POST", url, nil)
+
+	req.Header.Add("cookie", COOKIE)
+	req.Header.Add("Accept", "text/javascript")
+	req.Header.Add("X-Requested-With", "XMLHttpRequest")
+	req.Header.Add("Content-type", "application/x-sah-ws-1-call+json")
+	req.Header.Add("X-Context", CONTEXTID)
+
+	res, _ := http.DefaultClient.Do(req)
+
+	defer res.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body)
+
+	var fbvalues FunboxValues
+	if err := json.Unmarshal(body, &fbvalues); err != nil {
+		fmt.Println("Can not unmarshal JSON")
+		os.Exit(1)
+	} else {
+		fmt.Println("PPPoE Username : " + fbvalues.Result.Status.Ppp.PppData.Username)
+		fmt.Println("VLAN ID : " + strconv.Itoa(fbvalues.Result.Status.Vlan.GvlanData.Vlanid))
+		GPON_SN = fbvalues.Result.Status.Gpon.Veip0.SerialNumber
+		PON_VENDOR_ID = fbvalues.Result.Status.Gpon.Veip0.SerialNumber[0:4]
+		fmt.Println("GPON Serial Number : " + GPON_SN)
+		fmt.Println("PON Vendor ID : " + PON_VENDOR_ID)
+
+		HW_HWVER = fbvalues.Result.Status.Gpon.Veip0.HardwareVersion
+		OMCI_SW_VER1 = fbvalues.Result.Status.Gpon.Veip0.ONTSoftwareVersion0
+		OMCI_SW_VER2 = fbvalues.Result.Status.Gpon.Veip0.ONTSoftwareVersion1
+		generateGponCommands()
+	}
+}
+
 func getOntInfos() {
 	body := postRequest("{\"service\":\"NeMo.Intf.veip0\",\"method\":\"getMIBs\",\"parameters\":{\"mibs\":\"gpon\"}}")
 
@@ -129,7 +164,9 @@ func generateOMCC(oltvendorid string) {
 	fmt.Println("\nExecute this command -> flash set OMCC_VER " + id)
 
 	if oltvendorid == "ALCL" {
-		fmt.Println("flash set HW_HWVER " + HW_HWVER)
+		if len(HW_HWVER) != 0 {
+			fmt.Println("flash set HW_HWVER " + HW_HWVER)
+		}
 		fmt.Println("flash set OMCI_SW_VER1 " + OMCI_SW_VER1)
 		fmt.Println("flash set OMCI_SW_VER2 " + OMCI_SW_VER2)
 		fmt.Println("flash set OMCI_TM_OPT 0")
@@ -140,7 +177,7 @@ func generateOMCC(oltvendorid string) {
 func generateGponCommands() {
 	var oltvendorid string
 
-	fmt.Println("flash set GPON_PLOAM_PASSWD DEFAULT012")
+	//fmt.Println("flash set GPON_PLOAM_PASSWD DEFAULT012")
 	fmt.Println("flash set GPON_SN " + GPON_SN)
 	fmt.Println("flash set PON_VENDOR_ID " + PON_VENDOR_ID)
 	fmt.Println("\n## Unplug fiber from Livebox and plug it into UDM and wait a minute ##\n")

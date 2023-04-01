@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/urfave/cli/v2"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
@@ -22,50 +23,61 @@ var CONTEXTID, URL, COOKIE string
 var GPON_SN, PON_VENDOR_ID, HW_HWVER, OMCI_SW_VER1, OMCI_SW_VER2, dhcpoption90, dhcpoption77, vlanid, macaddress string
 
 func main() {
-	var ip, username string
-	var boxid uint8
-
-	fmt.Println("Which box do you have ?")
-	fmt.Println("1 - Livebox (DHCP Mode) ?")
-	fmt.Println("2 - Funbox (PPPoE Mode) ?")
-	fmt.Scan(&boxid)
-
-	// Ask for IP
-	fmt.Print("Livebox IP : ")
-	fmt.Scan(&ip)
-
-	// Check if IP is good and private
-	addr := net.ParseIP(ip)
-	if addr == nil {
-		log.Fatalln("Please provide a real IP Address")
-	} else if !addr.IsPrivate() {
-		log.Fatalln("Please provide a private IP Address")
+	app := &cli.App{
+		Name:      "GO-BOX",
+		Usage:     "CLI tool to fetch infos from Livebox/Funbox",
+		UsageText: "GO-BOX --ip <box ip> --box <livebox/funbox>",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:     "box",
+				Usage:    "Type of orange box (Livebox, Funbox)",
+				Required: true,
+			},
+			&cli.StringFlag{
+				Name:     "ip",
+				Usage:    "IP address of box",
+				Required: true,
+				Action: func(ctx *cli.Context, ip string) error {
+					addr := net.ParseIP(ip)
+					if addr == nil {
+						return cli.Exit("Please provide a real IP Address", 86)
+					} else if !addr.IsPrivate() {
+						return cli.Exit("Please provide a private IP Address", 86)
+					}
+					return nil
+				},
+			},
+			&cli.StringFlag{
+				Name:   "username",
+				Hidden: true,
+				Value:  "admin",
+				Usage:  "Username of admin management box",
+			},
+		},
+		Action: func(ctx *cli.Context) error {
+			fmt.Print("Password : ")
+			password, err := terminal.ReadPassword(int(os.Stdin.Fd()))
+			if err != nil {
+				log.Fatalln("Please provide a password")
+			} else if len(password) == 0 {
+				log.Fatalln("Password cannot be empty")
+			}
+			boxtype := strings.ToLower(ctx.String("box"))
+			switch boxtype {
+			case "livebox":
+				// Concatenate the URL
+				url := "http://" + ctx.String("ip") + "/ws"
+				instantiateConnection(url, ctx.String("username"), string(password))
+			case "funbox":
+				instantiateFunboxConnection(ctx.String("ip"), ctx.String("username"), string(password))
+			}
+			return nil
+		},
 	}
 
-	// Ask for Username
-	fmt.Print("Username : ")
-	fmt.Scan(&username)
-
-	// Ask for Password without displaying it
-	fmt.Print("Password : ")
-	password, err := terminal.ReadPassword(int(os.Stdin.Fd()))
-	if err != nil {
-		log.Fatalln("Please provide a password")
-	} else if len(password) == 0 {
-		log.Fatalln("Password cannot be empty")
+	if err := app.Run(os.Args); err != nil {
+		log.Fatal(err)
 	}
-
-	switch boxid {
-	case 1:
-		// Concatenate the URL
-		url := "http://" + ip + "/ws"
-		instantiateConnection(url, username, string(password))
-	case 2:
-		instantiateFunboxConnection(ip, username, string(password))
-	default:
-		log.Fatalln("Please provide a good option")
-	}
-
 }
 
 // This function will instanciate a connection to Livebox to catch ContextID and Cookie
@@ -122,7 +134,7 @@ func instantiateConnection(url string, username string, password string) {
 
 // This function will instanciate a connection to Livebox to catch ContextID and Cookie
 func instantiateFunboxConnection(ip string, username string, password string) {
-	url := "http://" + ip + "/authentication?username=" + username + "&password=" + string(password)
+	url := "http://" + ip + "/authenticate?username=" + username + "&password=" + string(password)
 
 	req, _ := http.NewRequest("POST", url, nil)
 
@@ -144,7 +156,7 @@ func instantiateFunboxConnection(ip string, username string, password string) {
 	str := strings.Split(cookie, ";")
 	cookie = str[0]
 
-	var instanciation Context
+	var instanciation FunboxContext
 
 	if err := json.Unmarshal(body, &instanciation); err != nil {
 		fmt.Println("Can not unmarshal JSON")
@@ -159,6 +171,8 @@ func instantiateFunboxConnection(ip string, username string, password string) {
 		COOKIE = cookie
 		URL = url
 	}
+
+	displayFunboxValues(ip)
 }
 
 func displayNecessaryInformations() {

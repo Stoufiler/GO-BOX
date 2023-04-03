@@ -177,11 +177,11 @@ func instantiateFunboxConnection(ip string, username string, password string) {
 
 func displayNecessaryInformations() {
 	fmt.Println("")
-	fmt.Println("===========LEOX GPON COMMAND=============")
+	fmt.Println("============LEOX GPON COMMAND============")
 	generateGponCommands()
 	fmt.Println("=========================================")
 	fmt.Println("")
-	fmt.Println("==========UDM PRO SE SETTINGS============")
+	fmt.Println("===========UDM PRO SE SETTINGS===========")
 	displayUDMinfos()
 	fmt.Println("=========================================")
 }

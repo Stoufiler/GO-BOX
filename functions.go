@@ -56,17 +56,23 @@ func displayFunboxValues(ip string) {
 		fmt.Println("Can not unmarshal JSON")
 		os.Exit(1)
 	} else {
+		fmt.Println("===========UDM PRO SE SETTINGS===========")
 		fmt.Println("PPPoE Username : " + fbvalues.Result.Status.Ppp.PppData.Username)
-		fmt.Println("VLAN ID : " + strconv.Itoa(fbvalues.Result.Status.Vlan.GvlanData.Vlanid))
+		fmt.Println("PPPoE Password : https://www.orange.pl/moj-orange -> Ustawienia -> Zabezpieczenia -> Hasło do Neostrady -> Zmień hasło")
+		fmt.Println("VLAN ID		: " + strconv.Itoa(fbvalues.Result.Status.Vlan.GvlanData.Vlanid))
+		fmt.Println("=========================================")
+
 		GPON_SN = fbvalues.Result.Status.Gpon.Veip0.SerialNumber
 		PON_VENDOR_ID = fbvalues.Result.Status.Gpon.Veip0.SerialNumber[0:4]
-		fmt.Println("GPON Serial Number : " + GPON_SN)
-		fmt.Println("PON Vendor ID : " + PON_VENDOR_ID)
 
 		HW_HWVER = fbvalues.Result.Status.Gpon.Veip0.HardwareVersion
 		OMCI_SW_VER1 = fbvalues.Result.Status.Gpon.Veip0.ONTSoftwareVersion0
 		OMCI_SW_VER2 = fbvalues.Result.Status.Gpon.Veip0.ONTSoftwareVersion1
+
+		fmt.Println("")
+		fmt.Println("============LEOX GPON COMMAND============")
 		generateGponCommands()
+		fmt.Println("=========================================")
 	}
 }
 

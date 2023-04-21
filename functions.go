@@ -201,5 +201,5 @@ func displayUDMinfos() {
 	fmt.Println("DHCP OPTION 60    : sagem")
 	fmt.Println("DHCP OPTION 77    : " + dhcpoption77)
 	fmt.Println("DHCP OPTION 90    : " + dhcpoption90)
-	fmt.Println("DHCP CoS          : 6 ")
+	fmt.Println("DHCP CoS          : 6 (Requires Network App 7.4.X or later)")
 }

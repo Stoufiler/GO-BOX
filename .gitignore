@@ -1,2 +1,4 @@
 gobox
 dist/
+.DS_Store
+.idea

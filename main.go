@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -17,10 +17,20 @@ import (
 )
 
 // Define essentially global variable to make requests once connected to Livebox
-var CONTEXTID, URL, COOKIE string
+var (
+	URL       string
+	COOKIE    string
+	CONTEXTID string
+)
 
 // Define some global variables used on further functions
-var GPON_SN, PON_VENDOR_ID, HW_HWVER, OMCI_SW_VER1, OMCI_SW_VER2, dhcpoption90, dhcpoption77, vlanid, macaddress string
+var (
+	HwHwver                                                string
+	PonVendorId                                            string
+	OmciSwVer1                                             string
+	OmciSwVer2                                             string
+	GponSn, dhcpoption90, dhcpoption77, vlanid, macaddress string
+)
 
 func main() {
 	app := &cli.App{
@@ -102,9 +112,9 @@ func instantiateConnection(url string, username string, password string) {
 	}
 
 	defer res.Body.Close()
-	body, _ := ioutil.ReadAll(res.Body)
+	body, _ := io.ReadAll(res.Body)
 
-	cookie := (res.Header.Get("Set-Cookie"))
+	cookie := res.Header.Get("Set-Cookie")
 	str := strings.Split(cookie, ";")
 	cookie = str[0]
 
@@ -134,7 +144,7 @@ func instantiateConnection(url string, username string, password string) {
 
 // This function will instanciate a connection to Livebox to catch ContextID and Cookie
 func instantiateFunboxConnection(ip string, username string, password string) {
-	url := "http://" + ip + "/authenticate?username=" + username + "&password=" + string(password)
+	url := "http://" + ip + "/authenticate?username=" + username + "&password=" + password
 
 	req, _ := http.NewRequest("POST", url, nil)
 
@@ -150,9 +160,9 @@ func instantiateFunboxConnection(ip string, username string, password string) {
 	}
 
 	defer res.Body.Close()
-	body, _ := ioutil.ReadAll(res.Body)
+	body, _ := io.ReadAll(res.Body)
 
-	cookie := (res.Header.Get("Set-Cookie"))
+	cookie := res.Header.Get("Set-Cookie")
 	str := strings.Split(cookie, ";")
 	cookie = str[0]
 

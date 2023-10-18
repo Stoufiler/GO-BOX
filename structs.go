@@ -1,6 +1,6 @@
 package main
 
-// Define struct to handle http requests : https://mholt.github.io/json-to-go/
+// Context Define struct to handle http requests : https://mholt.github.io/json-to-go/
 type Context struct {
 	Status int `json:"status"`
 	Data   struct {
@@ -568,10 +568,6 @@ type Ont struct {
 	} `json:"status"`
 }
 
-type Mtu struct {
-	Status int `json:"status"`
-}
-
 type MacAddress struct {
 	Status bool `json:"status"`
 	Data   struct {
@@ -721,20 +717,5 @@ type DHCP struct {
 				} `json:"ReqOption"`
 			} `json:"dhcp_data"`
 		} `json:"dhcp"`
-	} `json:"status"`
-}
-
-type NMC struct {
-	Status struct {
-		WanModeList           string `json:"WanModeList"`
-		WanMode               string `json:"WanMode"`
-		Username              string `json:"Username"`
-		FactoryResetScheduled bool   `json:"FactoryResetScheduled"`
-		ConnectionError       bool   `json:"ConnectionError"`
-		DefaultsLoaded        bool   `json:"DefaultsLoaded"`
-		ProvisioningState     string `json:"ProvisioningState"`
-		OfferType             string `json:"OfferType"`
-		OfferName             string `json:"OfferName"`
-		IPTVMode              string `json:"IPTVMode"`
 	} `json:"status"`
 }

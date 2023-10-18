@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -26,7 +26,7 @@ func postRequest(payload string) []byte {
 	res, _ := http.DefaultClient.Do(req)
 
 	defer res.Body.Close()
-	body, _ := ioutil.ReadAll(res.Body)
+	body, _ := io.ReadAll(res.Body)
 
 	if body == nil {
 		log.Fatal("Error while executing request to Livebox")
@@ -49,7 +49,7 @@ func displayFunboxValues(ip string) {
 	res, _ := http.DefaultClient.Do(req)
 
 	defer res.Body.Close()
-	body, _ := ioutil.ReadAll(res.Body)
+	body, _ := io.ReadAll(res.Body)
 
 	var fbvalues FunboxValues
 	if err := json.Unmarshal(body, &fbvalues); err != nil {
@@ -62,12 +62,12 @@ func displayFunboxValues(ip string) {
 		fmt.Println("VLAN ID		: " + strconv.Itoa(fbvalues.Result.Status.Vlan.GvlanData.Vlanid))
 		fmt.Println("=========================================")
 
-		GPON_SN = fbvalues.Result.Status.Gpon.Veip0.SerialNumber
-		PON_VENDOR_ID = fbvalues.Result.Status.Gpon.Veip0.SerialNumber[0:4]
+		GponSn = fbvalues.Result.Status.Gpon.Veip0.SerialNumber
+		PonVendorId = fbvalues.Result.Status.Gpon.Veip0.SerialNumber[0:4]
 
-		HW_HWVER = fbvalues.Result.Status.Gpon.Veip0.HardwareVersion
-		OMCI_SW_VER1 = fbvalues.Result.Status.Gpon.Veip0.ONTSoftwareVersion0
-		OMCI_SW_VER2 = fbvalues.Result.Status.Gpon.Veip0.ONTSoftwareVersion1
+		HwHwver = fbvalues.Result.Status.Gpon.Veip0.HardwareVersion
+		OmciSwVer1 = fbvalues.Result.Status.Gpon.Veip0.ONTSoftwareVersion0
+		OmciSwVer2 = fbvalues.Result.Status.Gpon.Veip0.ONTSoftwareVersion1
 
 		fmt.Println("")
 		fmt.Println("============LEOX GPON COMMAND============")
@@ -85,11 +85,11 @@ func getOntInfos() {
 		fmt.Println("Can not unmarshal JSON")
 		os.Exit(1)
 	} else {
-		GPON_SN = ont.Status.Gpon.Veip0.SerialNumber
-		PON_VENDOR_ID = ont.Status.Gpon.Veip0.VendorID
-		HW_HWVER = ont.Status.Gpon.Veip0.HardwareVersion
-		OMCI_SW_VER1 = ont.Status.Gpon.Veip0.ONTSoftwareVersion0
-		OMCI_SW_VER2 = ont.Status.Gpon.Veip0.ONTSoftwareVersion1
+		GponSn = ont.Status.Gpon.Veip0.SerialNumber
+		PonVendorId = ont.Status.Gpon.Veip0.VendorID
+		HwHwver = ont.Status.Gpon.Veip0.HardwareVersion
+		OmciSwVer1 = ont.Status.Gpon.Veip0.ONTSoftwareVersion0
+		OmciSwVer2 = ont.Status.Gpon.Veip0.ONTSoftwareVersion1
 	}
 }
 
@@ -146,11 +146,11 @@ func getDHCPInfos() {
 
 	// Add : every 2 char for DHCP Option 90
 	var buffer bytes.Buffer
-	var n_1 = 2 - 1
-	var l_1 = len(dhcpinfos.Status.Dhcp.DhcpData.SentOption.Num90.Value) - 1
-	for i, rune := range dhcpinfos.Status.Dhcp.DhcpData.SentOption.Num90.Value {
-		buffer.WriteRune(rune)
-		if i%2 == n_1 && i != l_1 {
+	var n1 = 2 - 1
+	var l1 = len(dhcpinfos.Status.Dhcp.DhcpData.SentOption.Num90.Value) - 1
+	for i, runner := range dhcpinfos.Status.Dhcp.DhcpData.SentOption.Num90.Value {
+		buffer.WriteRune(runner)
+		if i%2 == n1 && i != l1 {
 			buffer.WriteRune(':')
 		}
 	}
@@ -170,11 +170,11 @@ func generateOMCC(oltvendorid string) {
 	fmt.Println("\nExecute this command -> flash set OMCC_VER " + id)
 
 	if oltvendorid == "ALCL" {
-		if len(HW_HWVER) != 0 {
-			fmt.Println("flash set HW_HWVER " + HW_HWVER)
+		if len(HwHwver) != 0 {
+			fmt.Println("flash set HW_HWVER " + HwHwver)
 		}
-		fmt.Println("flash set OMCI_SW_VER1 " + OMCI_SW_VER1)
-		fmt.Println("flash set OMCI_SW_VER2 " + OMCI_SW_VER2)
+		fmt.Println("flash set OMCI_SW_VER1 " + OmciSwVer1)
+		fmt.Println("flash set OMCI_SW_VER2 " + OmciSwVer2)
 		fmt.Println("flash set OMCI_TM_OPT 0")
 		fmt.Println("flash set OMCI_OLT_MODE 1")
 	}
@@ -184,8 +184,8 @@ func generateGponCommands() {
 	var oltvendorid string
 
 	//fmt.Println("flash set GPON_PLOAM_PASSWD DEFAULT012")
-	fmt.Println("flash set GPON_SN " + GPON_SN)
-	fmt.Println("flash set PON_VENDOR_ID " + PON_VENDOR_ID)
+	fmt.Println("flash set GPON_SN " + GponSn)
+	fmt.Println("flash set PON_VENDOR_ID " + PonVendorId)
 	fmt.Println("\n## Unplug fiber from Livebox and plug it into UDM and wait a minute ##\n")
 	fmt.Println("Execute this command -> omcicli mib get 131")
 

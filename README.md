@@ -1,13 +1,13 @@
 <div align="center">
 <img src="images/logo.png" width="50%">
-<h1> GO-BOX</h1>
-<small><i>Tool to help you to bypass your Livebox</i></small></br>
+<h1>GO-BOX</h1>
+<small><i>Tool to help you to bypass your Livebox or Funbox</i></small></br>
 
 ![GitHub all releases](https://img.shields.io/github/downloads/StephanGR/GO-BOX/total?style=for-the-badge)
-</div
+</div>
 
 # Overview
-GO-BOX is an application written in GO that allows you to automatically generate commands to help you to bypass your Livebox
+GO-BOX is an application written in GO that allows you to automatically generate commands to help you to bypass your Livebox or Funbox
 
 This idea came to me while looking for how to replace my Livebox with my UDM SE.
 
@@ -48,7 +48,7 @@ GLOBAL OPTIONS:
    --help, -h   show help
 ```
 ## Windows
-Open a powershell terminal and go to executable file
+Open a powershell terminal or cmd and go to executable file
 ```powershell
 .\GO_BOX.exe --ip 192.168.1.1 --box livebox
 ```
@@ -59,6 +59,7 @@ Open a terminal and go to executable file
 ./GO-BOX --ip 192.168.1.1 --box livebox
 ```
 ## Example
+Do not copy, because some values are redacted due to security/privacy reasons and each modem has its own unique values
 ```bash
 ./GO-BOX --ip 192.168.1.1 --box livebox
 Password : 
@@ -89,9 +90,11 @@ MAC Address Clone : XX:XX:XX:XX:XX:XX
 DHCP OPTION 60    : sagem
 DHCP OPTION 77    : FSVDSL_livebox.Internet.softathome.Livebox5
 DHCP OPTION 90    : 00:00:00:00:00:00:00:00:00:00:00:1a:09:00:00:05:58:01:03:41:01:0D:66:74:69:2F:67:66:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX:XX
-DHCP CoS          : 6 
+DHCP CoS          : 6 (Requires Network App 7.4.X or later)
 =========================================
 ```
+## Contribution
+If you encounter any OLT Vendors that are unknown to us please open an issue so we can figure it out together!
 
 ## Special thanks
 I would never have been able to have all this information without the help of the [lafibre.info](https://lafibre.info/remplacer-livebox/mise-en-route-leox-lxt-010h-d/) forum as well as [iMordo](https://github.com/iMord0)

@@ -77,7 +77,7 @@ func main() {
 			case "livebox":
 				// Concatenate the URL
 				url := "http://" + ctx.String("ip") + "/ws"
-				instantiateConnection(url, ctx.String("username"), string(password))
+				instantiateLiveboxConnection(url, ctx.String("username"), string(password))
 			case "funbox":
 				instantiateFunboxConnection(ctx.String("ip"), ctx.String("username"), string(password))
 			}
@@ -90,8 +90,8 @@ func main() {
 	}
 }
 
-// This function will instanciate a connection to Livebox to catch ContextID and Cookie
-func instantiateConnection(url string, username string, password string) {
+// This function will instantiate a connection to Livebox to catch ContextID and Cookie
+func instantiateLiveboxConnection(url string, username string, password string) {
 	payload := strings.NewReader("{\"service\":\"sah.Device.Information\",\"method\":\"createContext\",\"parameters\":{\"applicationName\":\"webui\",\"username\":\"" + username + "\",\"password\":\"" + password + "\"}}")
 
 	req, _ := http.NewRequest("POST", url, payload)
@@ -121,7 +121,8 @@ func instantiateConnection(url string, username string, password string) {
 	var instanciation Context
 
 	if err := json.Unmarshal(body, &instanciation); err != nil {
-		fmt.Println("Can not unmarshal JSON")
+		fmt.Println("")
+		log.Fatalln("Error while unmarshalling JSON:", err)
 	}
 
 	if instanciation.Status != 0 {
@@ -142,7 +143,7 @@ func instantiateConnection(url string, username string, password string) {
 	}
 }
 
-// This function will instanciate a connection to Livebox to catch ContextID and Cookie
+// This function will instantiate a connection to Livebox to catch ContextID and Cookie
 func instantiateFunboxConnection(ip string, username string, password string) {
 	url := "http://" + ip + "/authenticate?username=" + username + "&password=" + password
 
@@ -156,7 +157,7 @@ func instantiateFunboxConnection(ip string, username string, password string) {
 
 	if err != nil {
 		fmt.Println()
-		log.Fatalln("Timeout (5s) exceeded while connecting to Livebox")
+		log.Fatalln("Timeout (5s) exceeded while connecting to Funbox")
 	}
 
 	defer res.Body.Close()
@@ -169,14 +170,15 @@ func instantiateFunboxConnection(ip string, username string, password string) {
 	var instanciation FunboxContext
 
 	if err := json.Unmarshal(body, &instanciation); err != nil {
-		fmt.Println("Can not unmarshal JSON")
+		fmt.Println("")
+		log.Fatalln("Error while unmarshalling JSON:", err)
 	}
 
 	if instanciation.Status != 0 {
-		errors.New("!!! Unable to connect to Livebox !!! Please check your login/pass")
+		errors.New("!!! Unable to connect to Funbox !!! Please check your login/pass")
 	} else {
 		fmt.Println("")
-		fmt.Println("✅ Successfully connected to Livebox ! ✅")
+		fmt.Println("✅ Successfully connected to Funbox ! ✅")
 		CONTEXTID = instanciation.Data.ContextID
 		COOKIE = cookie
 		URL = url

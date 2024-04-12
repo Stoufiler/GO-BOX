@@ -2,3 +2,4 @@ gobox
 dist/
 .DS_Store
 .idea
+qodana.yaml

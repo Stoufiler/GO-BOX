@@ -25,7 +25,7 @@ cd GO-BOX_Linux_x86_64
 
 ## Compile by yourself
 ```bash
-git clone https://github.com/StephanGR/GO-BOX.git
+git clone https://github.com/Stoufiler/GO-BOX.git
 cd GO-BOX
 go build .
 ./GO-BOX
@@ -37,31 +37,36 @@ NAME:
    GO-BOX - CLI tool to fetch infos from Livebox/Funbox
 
 USAGE:
-   GO-BOX --ip <box ip> --box <livebox/funbox>
+   GO-BOX [global options] command [command options]
 
 COMMANDS:
+   livebox  Fetch infos from Livebox
+   funbox   Fetch infos from Funbox
    help, h  Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   --box value  Type of orange box (Livebox, Funbox)
-   --ip value   IP address of box
-   --help, -h   show help
+   --ip value        IP address of box
+   --password value  Password of box
+   --help, -h        show help
 ```
+
 ## Windows
+
 Open a powershell terminal or cmd and go to executable file
 ```powershell
-.\GO_BOX.exe --ip 192.168.1.1 --box livebox
+.\GO_BOX.exe --ip 192.168.1.1 --password xxxx livebox
 ```
 
 ## Linux / MacOS
+
 Open a terminal and go to executable file
 ```bash
-./GO-BOX --ip 192.168.1.1 --box livebox
+./GO-BOX --ip 192.168.1.1 --password xxxx livebox
 ```
 ## Example
 Do not copy, because some values are redacted due to security/privacy reasons and each modem has its own unique values
 ```bash
-./GO-BOX --ip 192.168.1.1 --box livebox
+./GO-BOX --ip 192.168.1.1 --password xxxx livebox
 Password : 
 ✅ Successfully connected to Livebox ! ✅
 

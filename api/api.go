@@ -23,13 +23,14 @@ func NewClient(ip, password string) (*livebox.Client, error) {
 	return client, nil
 }
 
-// GetFunboxValues fetches values from a Funbox.
-func GetFunboxValues(client *livebox.Client) (*FunboxValues, error) {
-	var fbvalues FunboxValues
-	if err := client.Request(context.Background(), request.New("NeMo.Intf.data", "getMIBs", nil), &fbvalues); err != nil {
-		return nil, fmt.Errorf("could not get funbox values: %w", err)
+// GetPPPInfos fetches the PPPoE username and password from the Livebox.
+// Returns empty strings if the box does not expose them (e.g. Orange Poland).
+func GetPPPInfos(client *livebox.Client) (username, password string, err error) {
+	var ppp PPP
+	if err := client.Request(context.Background(), request.New("NMC", "get", nil), &ppp); err != nil {
+		return "", "", fmt.Errorf("could not get PPP infos: %w", err)
 	}
-	return &fbvalues, nil
+	return ppp.Status.Username, ppp.Status.Password, nil
 }
 
 // GetOntInfos fetches ONT information from the Livebox.
@@ -163,22 +164,40 @@ func DisplayUDMinfos(vlanid int, macaddress string, dhcpinfos *DHCPInfo) {
 
 // DisplayFunboxValues prints the Funbox values.
 func DisplayFunboxValues(client *livebox.Client) error {
-	fbvalues, err := GetFunboxValues(client)
+	username, password, err := GetPPPInfos(client)
 	if err != nil {
 		return err
 	}
 
+	vlan, err := GetInternetVlan(client)
+	if err != nil {
+		return err
+	}
+
+	ont, err := GetOntInfos(client)
+	if err != nil {
+		return err
+	}
+
+	passwordLine := password
+	if passwordLine == "" {
+		passwordLine = "(not exposed by box) https://www.orange.pl/moj-orange -> Ustawienia -> Zabezpieczenia -> Hasło do Neostrady -> Zmień hasło"
+	}
+
 	fmt.Println("===========UDM PRO SE SETTINGS===========")
-	fmt.Println("PPPoE Username : " + fbvalues.Result.Status.Ppp.PppData.Username)
-	fmt.Println("PPPoE Password : https://www.orange.pl/moj-orange -> Ustawienia -> Zabezpieczenia -> Hasło do Neostrady -> Zmień hasło")
-	fmt.Println("VLAN ID: " + strconv.Itoa(fbvalues.Result.Status.Vlan.GvlanData.Vlanid))
+	fmt.Println("PPPoE Username : " + username)
+	fmt.Println("PPPoE Password : " + passwordLine)
+	fmt.Println("VLAN ID: " + strconv.Itoa(vlan))
 	fmt.Println("=========================================")
 
-	gponSn := fbvalues.Result.Status.Gpon.Veip0.SerialNumber
-	ponVendorId := fbvalues.Result.Status.Gpon.Veip0.SerialNumber[0:4]
-	hwHwver := fbvalues.Result.Status.Gpon.Veip0.HardwareVersion
-	omciSwVer1 := fbvalues.Result.Status.Gpon.Veip0.ONTSoftwareVersion0
-	omciSwVer2 := fbvalues.Result.Status.Gpon.Veip0.ONTSoftwareVersion1
+	gponSn := ont.Status.Gpon.Veip0.SerialNumber
+	ponVendorId := ont.Status.Gpon.Veip0.VendorID
+	if ponVendorId == "" && len(gponSn) >= 4 {
+		ponVendorId = gponSn[0:4]
+	}
+	hwHwver := ont.Status.Gpon.Veip0.HardwareVersion
+	omciSwVer1 := ont.Status.Gpon.Veip0.ONTSoftwareVersion0
+	omciSwVer2 := ont.Status.Gpon.Veip0.ONTSoftwareVersion1
 
 	fmt.Println("")
 	fmt.Println("============LEOX GPON COMMAND============")

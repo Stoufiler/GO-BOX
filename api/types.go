@@ -1,28 +1,12 @@
 package api
 
-type FunboxValues struct {
-	Result struct {
-		Status struct {
-			Ppp struct {
-				PppData struct {
-					Username string `json:"Username"`
-				} `json:"ppp_data"`
-			} `json:"ppp"`
-			Vlan struct {
-				GvlanData struct {
-					Vlanid int `json:"VLANID"`
-				} `json:"gvlan_data"`
-			} `json:"vlan"`
-			Gpon struct {
-				Veip0 struct {
-					SerialNumber        string `json:"SerialNumber"`
-					HardwareVersion     string `json:"HardwareVersion"`
-					ONTSoftwareVersion0 string `json:"ONTSoftwareVersion0"`
-					ONTSoftwareVersion1 string `json:"ONTSoftwareVersion1"`
-				} `json:"veip0"`
-			} `json:"gpon"`
-		} `json:"status"`
-	} `json:"result"`
+// PPP holds the PPPoE credentials returned by "NMC get". Unlike the "ppp" MIB
+// (which strips the password), NMC exposes both Username and Password.
+type PPP struct {
+	Status struct {
+		Username string `json:"Username"`
+		Password string `json:"Password"`
+	} `json:"status"`
 }
 
 type Ont struct {
